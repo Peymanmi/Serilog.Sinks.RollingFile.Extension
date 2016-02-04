@@ -1,2 +1,2 @@
-# Serilog.Sink
+# Serilog.Sinks.SizeRollingFile
 Serilog sink extension
