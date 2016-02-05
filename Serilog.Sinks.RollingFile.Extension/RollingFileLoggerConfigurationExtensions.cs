@@ -31,7 +31,7 @@
         /// including the current log file. The value should folowing TimeSpan format (d.hh.mm.ss).The default is 7 days</param>
         /// <returns>Configuration object allowing method chaining.</returns>
         /// <remarks>The file will be written using the UTF-8 character set.</remarks>
-        public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, string pathFormat, TimeSpan? retainedFileDurationLimit,
+        public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, string pathFormat, TimeSpan? retainedFileDurationLimit = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum, string outputTemplate = DefaultOutputTemplate,
             IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null)
         {
