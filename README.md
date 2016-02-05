@@ -8,9 +8,12 @@ https://www.nuget.org/packages/Serilog.Sinks.RollingFile.Extension/
 
     PM> Install-Package Serilog.Sinks.RollingFile.Extension
 
-There are two ways to config the Serilog logger to use this custom rolling file.
 
-### 1. Defining in code
+
+## Configuring the logger
+
+
+### 1. Through the code
  
 ```cs
 new LoggerConfiguration()                                       
@@ -21,7 +24,7 @@ new LoggerConfiguration()
 ```
 
 
-### 2. Defining in Configuration file
+### 2. Configuration file
 
 ```xml
 <appSettings>
