@@ -15,7 +15,7 @@
 
         public DateTime Date { get; }
 
-        public int SequenceNumber { get; }
+        public int SequenceNumber { get; private set; }
 
 
         public DateTime Created { get; }
@@ -23,6 +23,11 @@
         {
             var fileName = roller.GetLogFilePath(DateTime.UtcNow, SequenceNumber + 1);
             return new RollingLogFile(fileName, DateTime.UtcNow, SequenceNumber + 1);
+        }
+
+        internal void ResetSequance()
+        {
+            SequenceNumber = 0;
         }
     }
 }

@@ -89,7 +89,7 @@
                     sizeLimitReached = true;
                 }
             }
-        }
+        }        
 
         internal bool SizeLimitReached { get { return sizeLimitReached; } }
 

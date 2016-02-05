@@ -78,7 +78,7 @@
             var fileInfos = Directory.GetFiles(directory)
                 .Select(f => new FileInfo(f));
 
-            var matchedFiles = SelectMatches(fileInfos);
+            var matchedFiles = SelectMatches(fileInfos, DateTime.UtcNow);
             if (matchedFiles.Any())
                 return matchedFiles.OrderBy(x => x.SequenceNumber).Last();
             else
@@ -108,11 +108,19 @@
             }
         }
 
-        public IEnumerable<RollingLogFile> SelectMatches(IEnumerable<FileInfo> fileInfos)
+        public IEnumerable<RollingLogFile> SelectMatches(IEnumerable<FileInfo> fileInfos, DateTime? date = null)
         {
             foreach (var fInfo in fileInfos)
             {
                 var filename = fInfo.Name;
+                if (date.HasValue)
+                {
+                    var tok = date.Value.ToString(DateFormat, CultureInfo.InvariantCulture);
+                    if (filename.IndexOf(tok) < 0)
+                        continue;
+                }
+
+
                 var match = _filenameMatcher.Match(filename);
                 if (match.Success)
                 {
@@ -122,10 +130,11 @@
                     {
                         var incPart = incGroup.Captures[0].Value.Substring(1);
                         inc = int.Parse(incPart, CultureInfo.InvariantCulture);
-                    }                    
+                    }
 
                     yield return new RollingLogFile(filename, fInfo.CreationTimeUtc, inc);
                 }
+
             }
         }
 

@@ -54,9 +54,10 @@
                     throw new ObjectDisposedException(ThisObjectName, "The rolling file sink has been disposed");
                 }
 
-                if (currentSink.SizeLimitReached || currentSink.LogFile.Date.Date != DateTime.UtcNow.Date)
+                var resetSequence = currentSink.LogFile.Date.Date != DateTime.UtcNow.Date;
+                if (currentSink.SizeLimitReached || resetSequence)
                 {
-                    this.currentSink = NextSizeLimitedFileSink();
+                    currentSink = NextSizeLimitedFileSink(resetSequence);
                     ApplyRetentionPolicy(roller.LogFileDirectory);
                 }
 
@@ -81,9 +82,12 @@
                 this.encoding);
         }
 
-        private SizeLimitedFileSink NextSizeLimitedFileSink()
+        private SizeLimitedFileSink NextSizeLimitedFileSink(bool resetSequance = false)
         {
-            var next = this.currentSink.LogFile.Next(roller);
+            if (resetSequance)
+                currentSink.LogFile.ResetSequance();
+
+            var next = currentSink.LogFile.Next(roller);
             this.currentSink.Dispose();
 
             return new SizeLimitedFileSink(this.formatter, roller, fileSizeLimitBytes, next, this.encoding);
@@ -96,20 +100,16 @@
                 Directory.CreateDirectory(path);
             }
         }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or 
-        /// resetting unmanaged resources.
-        /// </summary>
+       
         public void Dispose()
         {
             lock (this.syncRoot)
             {
-                if (!this.disposed && this.currentSink != null)
+                if (!disposed && currentSink != null)
                 {
-                    this.currentSink.Dispose();
-                    this.currentSink = null;
-                    this.disposed = true;
+                   currentSink.Dispose();
+                   currentSink = null;
+                   disposed = true;
                 }
             }
         }

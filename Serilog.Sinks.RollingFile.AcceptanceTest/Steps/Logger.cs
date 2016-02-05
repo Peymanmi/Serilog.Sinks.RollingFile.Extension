@@ -22,8 +22,6 @@ namespace Serilog.Sinks.RollingFile.AcceptanceTest.Steps
                 eventList.Add(new Exception(string.Format("Exception No:{0}", eventCnt)));
 
             ScenarioContext.Current.Add("Events", eventList);
-
-
         }
 
         [When("Logger log all events")]
