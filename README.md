@@ -2,9 +2,18 @@
 
 This project has been developed to extend [Serilog](https://github.com/serilog/serilog) buit-in RollingFile, to limit the log files based on size, also purge old files to free up disk space.
 
-There are two ways to config the Serilog logger to use this custom rolling file.
+## The nuget package  [![NuGet Status](https://img.shields.io/nuget/v/Serilog.Sinks.RollingFile.Extension.svg?style=flat)](https://www.nuget.org/packages/Serilog.Sinks.RollingFile.Extension/)
 
-### 1. Defining in code
+https://www.nuget.org/packages/Serilog.Sinks.RollingFile.Extension/
+
+    PM> Install-Package Serilog.Sinks.RollingFile.Extension
+
+
+
+## Configuring the logger
+
+
+### 1. Through the code
  
 ```cs
 new LoggerConfiguration()                                       
@@ -15,7 +24,7 @@ new LoggerConfiguration()
 ```
 
 
-### 2. Defining in Configuration file
+### 2. Configuration file
 
 ```xml
 <appSettings>
