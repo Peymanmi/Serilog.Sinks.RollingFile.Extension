@@ -100,23 +100,23 @@
                 Directory.CreateDirectory(path);
             }
         }
-       
+
         public void Dispose()
         {
             lock (this.syncRoot)
             {
                 if (!disposed && currentSink != null)
                 {
-                   currentSink.Dispose();
-                   currentSink = null;
-                   disposed = true;
+                    currentSink.Dispose();
+                    currentSink = null;
+                    disposed = true;
                 }
             }
         }
 
         void ApplyRetentionPolicy(string currentFilePath)
         {
-            if (retainedFileDurationLimit == null) return;
+            if (!retainedFileDurationLimit.HasValue) return;
 
             var currentFileName = Path.GetFileName(currentFilePath);
 

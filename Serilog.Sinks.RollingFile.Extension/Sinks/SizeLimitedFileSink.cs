@@ -52,7 +52,13 @@
             }
             catch (IOException ex)
             {
-                SelfLog.WriteLine("Error {0} while removing obsolete file {1}", ex, rollingLogFile.Filename);
+                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
+
+                return OpenFileForWriting(folderPath, rollingLogFile.Next(roller), encoding);
+            }
+            catch (Exception ex)
+            {
+                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
                 throw;
             }
         }
@@ -89,7 +95,7 @@
                     sizeLimitReached = true;
                 }
             }
-        }        
+        }
 
         internal bool SizeLimitReached { get { return sizeLimitReached; } }
 
