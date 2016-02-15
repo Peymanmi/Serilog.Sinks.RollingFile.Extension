@@ -1,4 +1,4 @@
-# Serilog.Sinks.SizeRollingFile
+# Serilog.Sinks.SizeRollingFile      [![Build status](https://ci.appveyor.com/api/projects/status/iygk78hbgjbh4tp6)](https://ci.appveyor.com/project/peymanmi/serilog-sinks-rollingfile-extension)
 
 This project has been developed to extend [Serilog](https://github.com/serilog/serilog) buit-in RollingFile, to limit the log files based on size, also purge old files to free up disk space.
 
