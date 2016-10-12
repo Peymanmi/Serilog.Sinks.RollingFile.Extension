@@ -2,6 +2,7 @@
 {
     using Configuration;
     using Events;
+    using Formatting;
     using Formatting.Display;
     using Sinks;
     using System;
@@ -43,6 +44,21 @@
             var templateFormatter = new MessageTemplateTextFormatter(outputTemplate, formatProvider);
 
             var sink = new SizeRollingFileSink(pathFormat, templateFormatter, fileSizeLimitBytes ?? DefaultFileSizeLimitBytes,
+                retainedFileDurationLimit ?? TimeSpan.Parse(DefaultretainedFileDurationLimit));
+
+            return sinkConfiguration.Sink(sink, restrictedToMinimumLevel);
+        }
+
+        public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, ITextFormatter formatter, string pathFormat, TimeSpan? retainedFileDurationLimit = null,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum, string outputTemplate = DefaultOutputTemplate,
+            IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null)
+        {
+            if (sinkConfiguration == null)
+            {
+                throw new ArgumentNullException("configuration");
+            }
+
+            var sink = new SizeRollingFileSink(pathFormat, formatter, fileSizeLimitBytes ?? DefaultFileSizeLimitBytes,
                 retainedFileDurationLimit ?? TimeSpan.Parse(DefaultretainedFileDurationLimit));
 
             return sinkConfiguration.Sink(sink, restrictedToMinimumLevel);

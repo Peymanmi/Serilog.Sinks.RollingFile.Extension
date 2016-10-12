@@ -16,6 +16,7 @@
         private readonly long fileSizeLimitBytes;
         private readonly TimeSpan? retainedFileDurationLimit;
         private readonly Encoding encoding;
+        private readonly ITextFormatter textFormatter;
         private SizeLimitedFileSink currentSink;
         private readonly object syncRoot = new object();
         private bool disposed;
@@ -31,7 +32,7 @@
             this.encoding = encoding;
             this.retainedFileDurationLimit = retainedFileDurationLimit;
             this.currentSink = GetLatestSink();
-        }
+        }        
 
         /// <summary>
         /// Emits a log event to this sink
