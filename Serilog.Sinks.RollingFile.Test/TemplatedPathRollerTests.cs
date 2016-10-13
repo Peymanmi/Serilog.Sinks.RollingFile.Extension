@@ -6,6 +6,7 @@
     using System.Linq;
     using System.IO;
 
+    [Category("Unit")]
     public class TemplatedPathRollerTests
     {
         [Test]

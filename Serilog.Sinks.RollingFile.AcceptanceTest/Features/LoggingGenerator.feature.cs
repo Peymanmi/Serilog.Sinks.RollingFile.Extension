@@ -20,6 +20,7 @@ namespace Serilog.Sinks.RollingFile.AcceptanceTest.Features
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [NUnit.Framework.TestFixtureAttribute()]
     [NUnit.Framework.DescriptionAttribute("LoggingGenerator")]
+    [NUnit.Framework.CategoryAttribute("AcceptanceTest")]
     public partial class LoggingGeneratorFeature
     {
         
@@ -32,7 +33,8 @@ namespace Serilog.Sinks.RollingFile.AcceptanceTest.Features
         public virtual void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "LoggingGenerator", "", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "LoggingGenerator", "", ProgrammingLanguage.CSharp, new string[] {
+                        "AcceptanceTest"});
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -69,13 +71,13 @@ namespace Serilog.Sinks.RollingFile.AcceptanceTest.Features
         public virtual void Logging10Events()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Logging 10 events", ((string[])(null)));
-#line 3
-this.ScenarioSetup(scenarioInfo);
 #line 4
- testRunner.Given("I have entered 10 into the logger", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+this.ScenarioSetup(scenarioInfo);
 #line 5
- testRunner.When("Logger log all events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+ testRunner.Given("I have entered 10 into the logger", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line 6
+ testRunner.When("Logger log all events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 7
  testRunner.Then("Should log 1 events file in log folder", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             this.ScenarioCleanup();
@@ -86,13 +88,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void Logging999Events()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Logging 999 events", ((string[])(null)));
-#line 8
-this.ScenarioSetup(scenarioInfo);
-#line 9
- testRunner.Given("I have entered 999 into the logger", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line 10
- testRunner.When("Logger log all events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+this.ScenarioSetup(scenarioInfo);
 #line 11
+ testRunner.Given("I have entered 999 into the logger", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 12
+ testRunner.When("Logger log all events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 13
  testRunner.Then("Should log 5 events file in log folder", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             this.ScenarioCleanup();

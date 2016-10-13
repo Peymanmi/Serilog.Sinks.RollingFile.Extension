@@ -44,7 +44,7 @@
             try
             {
                 log = new LoggerConfiguration()
-                    .WriteTo.RollingFile(pathFormat, retainedFileCountLimit: 3)
+                    .WriteTo.SizeRollingFile(pathFormat, retainedFileDurationLimit: TimeSpan.FromSeconds(180))
                     .CreateLogger();
 
                 log.Write(Some.InformationEvent());

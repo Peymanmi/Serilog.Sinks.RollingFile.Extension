@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Serilog.Sinks.RollingFile.Extension</id>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <authors>peyman.malaei</authors>
     <owners>peyman.malaei</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
@@ -13,7 +13,7 @@
     <copyright>Copyright 2016</copyright>
     <tags>Serilog Rollingfile</tags>
     <dependencies>
-      <dependency id="Serilog" version="1.5.14" />
+      <dependency id="Serilog" version="2.3.0" />
     </dependencies>
   </metadata>
 </package>
