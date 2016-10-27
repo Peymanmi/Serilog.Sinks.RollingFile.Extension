@@ -90,10 +90,7 @@
                                 "$");
             }
 
-
-
-            DirectorySearchPattern = filenameTemplate.Replace(DateSpecifier, "*");
-            DirectorySearchPattern = filenameTemplate.Replace(LeveSpecifier, "*");
+            DirectorySearchPattern = filenameTemplate.Replace(DateSpecifier, "*").Replace(LeveSpecifier, "*");
             LogFileDirectory = directory;
             _pathTemplate = Path.Combine(LogFileDirectory, filenameTemplate);
 
