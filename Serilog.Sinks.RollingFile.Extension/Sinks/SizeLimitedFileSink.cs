@@ -27,6 +27,7 @@
             this.formatter = formatter;
             this.roller = roller;
             this.fileSizeLimitBytes = fileSizeLimitBytes;
+            this.EnableLevelLogging = roller.PathIncludesLevel;
             this.output = OpenFileForWriting(roller.LogFileDirectory, roller.GetLatestOrNew(), encoding ?? Encoding.UTF8);
         }
 
@@ -36,6 +37,7 @@
             this.formatter = formatter;
             this.roller = roller;
             this.fileSizeLimitBytes = fileSizeLimitBytes;
+            this.EnableLevelLogging = roller.PathIncludesLevel;
             this.output = OpenFileForWriting(roller.LogFileDirectory, rollingLogFile, encoding ?? Encoding.UTF8);
         }
 
@@ -90,12 +92,18 @@
                 formatter.Format(logEvent, output);
                 output.Flush();
 
+                this.ActiveLogLevel = logEvent.Level;
+
                 if (output.BaseStream.Length > fileSizeLimitBytes)
                 {
                     sizeLimitReached = true;
                 }
             }
         }
+
+        internal bool EnableLevelLogging { get; private set; }
+
+        internal LogEventLevel? ActiveLogLevel { get; set; }
 
         internal bool SizeLimitReached { get { return sizeLimitReached; } }
 

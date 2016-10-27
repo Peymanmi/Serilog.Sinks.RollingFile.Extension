@@ -1,5 +1,6 @@
 ﻿namespace Serilog.Sinks.RollingFile.Extension.Sinks
 {
+    using Events;
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -11,6 +12,7 @@
     {
         const string OldStyleDateSpecifier = "{0}";
         const string DateSpecifier = "{Date}";
+        const string LeveSpecifier = "{Level}";
         const string DateFormat = "yyyyMMdd";
         const string DefaultSeparator = "-";
 
@@ -43,37 +45,78 @@
                     DateSpecifier + Path.GetExtension(filenameTemplate);
             }
 
-            var indexOfSpecifier = filenameTemplate.IndexOf(DateSpecifier, StringComparison.Ordinal);
-            var prefix = filenameTemplate.Substring(0, indexOfSpecifier);
-            var suffix = filenameTemplate.Substring(indexOfSpecifier + DateSpecifier.Length);
-            _filenameMatcher = new Regex(
-                "^" +
-                Regex.Escape(prefix) +
-                "(?<date>\\d{" + DateFormat.Length + "})" +
-                "(?<inc>_[0-9]{3,}){0,1}" +
-                Regex.Escape(suffix) +
-                "$");
+            var indexOfDateSpecifier = filenameTemplate.IndexOf(DateSpecifier, StringComparison.Ordinal);
+            var indexOfLevelSpecifier = filenameTemplate.IndexOf(LeveSpecifier, StringComparison.Ordinal);
+            if(indexOfLevelSpecifier == -1)
+            {
+                var prefix = filenameTemplate.Substring(0, indexOfDateSpecifier);                
+                var suffix = filenameTemplate.Substring(indexOfDateSpecifier + DateSpecifier.Length);
+                _filenameMatcher = new Regex(
+                            "^" +
+                            Regex.Escape(prefix) +
+                            "(?<date>\\d{" + DateFormat.Length + "})" +                            
+                            "(?<inc>_[0-9]{3,}){0,1}" +
+                            Regex.Escape(suffix) +
+                            "$");
+            }
+            else if (indexOfDateSpecifier < indexOfLevelSpecifier)
+            {
+                var prefix = filenameTemplate.Substring(0, indexOfDateSpecifier);
+                var middle = filenameTemplate.Substring(indexOfDateSpecifier + DateSpecifier.Length, indexOfLevelSpecifier - (indexOfDateSpecifier + DateSpecifier.Length));
+                var suffix = filenameTemplate.Substring(indexOfLevelSpecifier + LeveSpecifier.Length);
+                _filenameMatcher = new Regex(
+                            "^" +
+                            Regex.Escape(prefix) +
+                            "(?<date>\\d{" + DateFormat.Length + "})" +
+                            Regex.Escape(middle) +
+                            "(?<level>[aA-zZ]+?(?=_|\\.))" +
+                            "(?<inc>_[0-9]{3,}){0,1}" +
+                            Regex.Escape(suffix) +
+                            "$");
+            }
+            else
+            {
+                var prefix = filenameTemplate.Substring(0, indexOfLevelSpecifier);
+                var middle = filenameTemplate.Substring(indexOfLevelSpecifier + LeveSpecifier.Length, indexOfDateSpecifier - (indexOfLevelSpecifier + LeveSpecifier.Length));
+                var suffix = filenameTemplate.Substring(indexOfDateSpecifier + DateSpecifier.Length);
+                _filenameMatcher = new Regex(
+                                "^" +
+                                Regex.Escape(prefix) +
+                                "(?<level>[aA-zZ]+?(?=\\" + middle + " )" +
+                                Regex.Escape(middle) +
+                                "(?<date>\\d{" + DateFormat.Length + "})" +
+                                "(?<inc>_[0-9]{3,}){0,1}" +
+                                Regex.Escape(suffix) +
+                                "$");
+            }
+
+
 
             DirectorySearchPattern = filenameTemplate.Replace(DateSpecifier, "*");
+            DirectorySearchPattern = filenameTemplate.Replace(LeveSpecifier, "*");
             LogFileDirectory = directory;
             _pathTemplate = Path.Combine(LogFileDirectory, filenameTemplate);
+
+            this.PathIncludesLevel = filenameTemplate.IndexOf(LeveSpecifier, StringComparison.Ordinal) > -1;
         }
 
         public string LogFileDirectory { get; }
 
         public string DirectorySearchPattern { get; }
 
-        public string GetLogFilePath(DateTime date, int sequenceNumber)
+        public bool PathIncludesLevel { get; private set; }
+
+        public string GetLogFilePath(DateTime date, LogEventLevel? level, int sequenceNumber)
         {
             var tok = date.ToString(DateFormat, CultureInfo.InvariantCulture);
 
             if (sequenceNumber != 0)
                 tok += "_" + sequenceNumber.ToString("0000", CultureInfo.InvariantCulture);
 
-            return _pathTemplate.Replace(DateSpecifier, tok);
+            return _pathTemplate.Replace(DateSpecifier, tok).Replace(LeveSpecifier, level?.ToString().ToLower());
         }
 
-        internal RollingLogFile GetLatestOrNew()
+        internal RollingLogFile GetLatestOrNew(LogEventLevel level = LogEventLevel.Information)
         {
             var fileInfos = Directory.GetFiles(directory)
                 .Select(f => new FileInfo(f));
@@ -82,7 +125,7 @@
             if (matchedFiles.Any())
                 return matchedFiles.OrderBy(x => x.SequenceNumber).Last();
             else
-                return new RollingLogFile(GetLogFilePath(DateTime.UtcNow, 1), DateTime.UtcNow, 1);
+                return new RollingLogFile(GetLogFilePath(DateTime.UtcNow, level, 1), DateTime.UtcNow, 1);
         }
 
         public IEnumerable<RollingLogFile> GetAllFiles()
@@ -147,13 +190,14 @@
                 {
                     var inc = 0;
                     var incGroup = match.Groups["inc"];
+                    var level = match.Groups["level"];
                     if (incGroup.Captures.Count != 0)
                     {
                         var incPart = incGroup.Captures[0].Value.Substring(1);
                         inc = int.Parse(incPart, CultureInfo.InvariantCulture);
                     }
 
-                    yield return new RollingLogFile(filename, DateTime.UtcNow, inc);
+                    yield return new RollingLogFile(filename, DateTime.UtcNow, inc , level.Value);
                 }
             }
         }

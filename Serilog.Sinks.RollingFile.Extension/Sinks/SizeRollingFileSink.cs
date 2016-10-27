@@ -32,7 +32,7 @@
             this.encoding = encoding;
             this.retainedFileDurationLimit = retainedFileDurationLimit;
             this.currentSink = GetLatestSink();
-        }        
+        }
 
         /// <summary>
         /// Emits a log event to this sink
@@ -56,9 +56,15 @@
                 }
 
                 var resetSequence = currentSink.LogFile.Date.Date != DateTime.UtcNow.Date;
+
+                if (currentSink.EnableLevelLogging && currentSink.ActiveLogLevel != logEvent.Level)
+                {
+                    currentSink = NextSizeLimitedFileSink(resetSequence, logEvent.Level);
+                }
+
                 if (currentSink.SizeLimitReached || resetSequence)
                 {
-                    currentSink = NextSizeLimitedFileSink(resetSequence);
+                    currentSink = NextSizeLimitedFileSink(resetSequence, logEvent.Level);
                     ApplyRetentionPolicy(roller.LogFileDirectory);
                 }
 
@@ -83,15 +89,15 @@
                 this.encoding);
         }
 
-        private SizeLimitedFileSink NextSizeLimitedFileSink(bool resetSequance = false)
+        private SizeLimitedFileSink NextSizeLimitedFileSink(bool resetSequance = false, LogEventLevel? level = null)
         {
             if (resetSequance)
                 currentSink.LogFile.ResetSequance();
 
-            var next = currentSink.LogFile.Next(roller);
+            var next = currentSink.LogFile.Next(roller, level);
             this.currentSink.Dispose();
 
-            return new SizeLimitedFileSink(this.formatter, roller, fileSizeLimitBytes, next, this.encoding);
+            return new SizeLimitedFileSink(this.formatter, roller, fileSizeLimitBytes, next, this.encoding) { ActiveLogLevel = level };
         }
 
         private static void EnsureDirectoryCreated(string path)

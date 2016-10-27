@@ -39,6 +39,10 @@
       <HintPath>..\packages\Serilog.2.3.0\lib\net46\Serilog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Serilog.Formatting.Compact, Version=1.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.Formatting.Compact.1.0.0\lib\net45\Serilog.Formatting.Compact.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -54,6 +58,7 @@
     <Compile Include="Support\Clock.cs" />
     <Compile Include="Support\Some.cs" />
     <Compile Include="TemplatedPathRollerTests.cs" />
+    <Compile Include="TestFormatterTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

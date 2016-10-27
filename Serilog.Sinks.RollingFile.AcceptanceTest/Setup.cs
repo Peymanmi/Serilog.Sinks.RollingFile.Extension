@@ -8,6 +8,7 @@
     [Binding]
     public class Setup
     {
+        private static ILogger logger;
 
         static Setup()
         {
@@ -16,20 +17,22 @@
         [AfterTestRun]
         public static void After()
         {
-            var logger = Log.Logger as IDisposable;
             if (logger != null)
             {
-                logger.Dispose();
                 var logPath = @"C:\temp\logger\";
                 var files = Directory.GetFiles(logPath).ToList();
-                files.ForEach(f => File.Delete(f));
+                // files.ForEach(f => File.Delete(f));
+
+                files.ForEach(f => logger.Debug("{0} has been deleted", f));
+                ((IDisposable)logger).Dispose();
             }
+
         }
 
         [BeforeTestRun]
         public static void Before()
         {
-            var logger = new LoggerConfiguration()
+            logger = new LoggerConfiguration()
                     .ReadFrom.AppSettings()
                     .Enrich.WithMachineName()
                     .Enrich.FromLogContext()
