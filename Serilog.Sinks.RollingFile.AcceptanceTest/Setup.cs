@@ -21,10 +21,10 @@
             {
                 var logPath = @"C:\temp\logger\";
                 var files = Directory.GetFiles(logPath).ToList();
-                // files.ForEach(f => File.Delete(f));
 
-                files.ForEach(f => logger.Debug("{0} has been deleted", f));
                 ((IDisposable)logger).Dispose();
+
+                files.ForEach(f => File.Delete(f));                
             }
 
         }

@@ -10,4 +10,4 @@ Scenario: Logging 10 events
 Scenario: Logging 999 events
 	Given I have entered 999 into the logger	
 	When Logger log all events
-	Then Should log 5 events file in log folder
+	Then Should log 7 events file in log folder

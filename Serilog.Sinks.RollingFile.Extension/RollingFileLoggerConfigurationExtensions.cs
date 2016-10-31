@@ -34,23 +34,27 @@
         /// <remarks>The file will be written using the UTF-8 character set.</remarks>
         public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, string pathFormat, TimeSpan? retainedFileDurationLimit = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum, string outputTemplate = DefaultOutputTemplate,
-            IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null)
+            IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null, bool supportAsync = false, int? bufferSize = null, int? maxRetries = null)
         {
 
             var templateFormatter = new MessageTemplateTextFormatter(outputTemplate, formatProvider);
 
-            return SizeRollingFile(sinkConfiguration, templateFormatter, pathFormat, retainedFileDurationLimit, 
-                restrictedToMinimumLevel, outputTemplate, formatProvider, fileSizeLimitBytes);            
+            return SizeRollingFile(sinkConfiguration, templateFormatter, pathFormat, retainedFileDurationLimit,
+                restrictedToMinimumLevel, outputTemplate, formatProvider, fileSizeLimitBytes, supportAsync, bufferSize, maxRetries);
         }
 
         public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, ITextFormatter formatter, string pathFormat, TimeSpan? retainedFileDurationLimit = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum, string outputTemplate = DefaultOutputTemplate,
-            IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null)
+            IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null, bool supportAsync = false, int? bufferSize = null, int? maxRetries = null)
         {
             if (sinkConfiguration == null)
             {
                 throw new ArgumentNullException("configuration");
             }
+
+            AsyncOptions.SupportAsync = supportAsync;
+            AsyncOptions.MaxRetries = maxRetries.HasValue ? maxRetries.Value : AsyncOptions.MaxRetries;
+            AsyncOptions.BufferSize = bufferSize.HasValue ? bufferSize.Value : AsyncOptions.BufferSize;
 
             var sink = new SizeRollingFileSink(pathFormat, formatter, fileSizeLimitBytes ?? DefaultFileSizeLimitBytes,
                 retainedFileDurationLimit ?? TimeSpan.Parse(DefaultretainedFileDurationLimit));

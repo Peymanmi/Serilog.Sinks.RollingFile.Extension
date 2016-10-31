@@ -95,7 +95,7 @@ this.ScenarioSetup(scenarioInfo);
 #line 12
  testRunner.When("Logger log all events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line 13
- testRunner.Then("Should log 5 events file in log folder", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+ testRunner.Then("Should log 7 events file in log folder", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             this.ScenarioCleanup();
         }

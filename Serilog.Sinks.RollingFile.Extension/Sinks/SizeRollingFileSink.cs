@@ -8,6 +8,10 @@
     using System.Text;
     using System.IO;
     using Debugging;
+    using System.Collections.Concurrent;
+    using System.Threading.Tasks;
+    using System.Threading;
+    using Aspects;
 
     public class SizeRollingFileSink : ILogEventSink, IDisposable
     {
@@ -21,6 +25,8 @@
         private readonly object syncRoot = new object();
         private bool disposed;
         private readonly TemplatedPathRoller roller;
+        private readonly BlockingCollection<LogEvent> queue;
+        private readonly CancellationTokenSource cancelToken = new CancellationTokenSource();
 
         public SizeRollingFileSink(string pathFormat, ITextFormatter formatter, long fileSizeLimitBytes,
             TimeSpan? retainedFileDurationLimit, Encoding encoding = null)
@@ -32,6 +38,12 @@
             this.encoding = encoding;
             this.retainedFileDurationLimit = retainedFileDurationLimit;
             this.currentSink = GetLatestSink();
+
+            if (AsyncOptions.SupportAsync)
+            {
+                this.queue = new BlockingCollection<LogEvent>(AsyncOptions.BufferSize);
+                Task.Run((Action)ProcessQueue, cancelToken.Token);
+            }
         }
 
         /// <summary>
@@ -42,12 +54,19 @@
         /// <exception cref="ObjectDisposedException"></exception>
         public void Emit(LogEvent logEvent)
         {
-
             if (logEvent == null)
             {
                 throw new ArgumentNullException("logEvent");
             }
 
+            if (AsyncOptions.SupportAsync)
+                this.queue.Add(logEvent);
+            else
+                WriteToFile(logEvent);
+        }
+
+        private void WriteToFile(LogEvent logEvent)
+        {
             lock (this.syncRoot)
             {
                 if (this.disposed)
@@ -117,11 +136,12 @@
                     currentSink.Dispose();
                     currentSink = null;
                     disposed = true;
+                    cancelToken.Cancel();
                 }
             }
         }
 
-        void ApplyRetentionPolicy(string currentFilePath)
+        private void ApplyRetentionPolicy(string currentFilePath)
         {
             if (!retainedFileDurationLimit.HasValue) return;
 
@@ -147,6 +167,36 @@
                 {
                     SelfLog.WriteLine("Error {0} while removing obsolete file {1}", ex, fullPath);
                 }
+            }
+        }
+
+        private void ProcessQueue()
+        {
+            try
+            {
+                ProcessQueueWithRetry();
+            }
+            catch (Exception ex)
+            {
+                SelfLog.WriteLine("Error occured in processing queue, {0} thread: {1}", typeof(SizeRollingFileSink), ex);
+            }
+        }
+
+        [RetryOnException]
+        private void ProcessQueueWithRetry()
+        {
+            try
+            {
+                while (true)
+                {
+                    var logEvent = queue.Take(this.cancelToken.Token);
+                    WriteToFile(logEvent);
+                }
+            }
+            catch
+            {
+                SelfLog.WriteLine("Error occured in ProcessQueueWithRetry, {0} ", typeof(SizeRollingFileSink));
+                throw;
             }
         }
     }
