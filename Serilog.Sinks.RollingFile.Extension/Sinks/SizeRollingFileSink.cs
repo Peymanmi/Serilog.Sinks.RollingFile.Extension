@@ -11,7 +11,7 @@
     using System.Collections.Concurrent;
     using System.Threading.Tasks;
     using System.Threading;
-    using Aspects;
+    using Polly;
 
     public class SizeRollingFileSink : ILogEventSink, IDisposable
     {
@@ -174,15 +174,20 @@
         {
             try
             {
-                ProcessQueueWithRetry();
+                Func<int, TimeSpan> sleepFunc =
+                            retryNumber => TimeSpan.FromMilliseconds(AsyncOptions.RetryWaitInMillisecond * retryNumber);
+
+                var polly = Policy.Handle<Exception>();
+                polly.WaitAndRetry(AsyncOptions.MaxRetries, sleepFunc,
+                       (exception, timeSpan) => Log.Error("Error executing callback {@Exception}", exception))
+                       .Execute(ProcessQueueWithRetry);                
             }
             catch (Exception ex)
             {
                 SelfLog.WriteLine("Error occured in processing queue, {0} thread: {1}", typeof(SizeRollingFileSink), ex);
             }
         }
-
-        [RetryOnException]
+        
         private void ProcessQueueWithRetry()
         {
             try

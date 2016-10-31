@@ -14,7 +14,6 @@
     <tags>Serilog Rollingfile</tags>
     <dependencies>
       <dependency id="Polly" version="4.3.0" />
-      <dependency id="PostSharp" version="4.3.22" />
       <dependency id="Serilog" version="2.3.0" />
       <dependency id="Serilog.Enrichers.Environment" version="2.1.0" />
       <dependency id="Serilog.Settings.AppSettings" version="2.0.0" />      
