@@ -8,7 +8,7 @@
     using System;
     public static class RollingFileLoggerConfigurationExtensions
     {
-        private const string DefaultretainedFileDurationLimit = "7.00.00.00";
+        private const string DefaultretainedFileDurationLimit = "7.00:00:00";
         private const long DefaultFileSizeLimitBytes = 1L * 1024 * 1024 * 1024;
         private const string DefaultOutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message}{NewLine}{Exception}";
 
@@ -36,17 +36,11 @@
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum, string outputTemplate = DefaultOutputTemplate,
             IFormatProvider formatProvider = null, long? fileSizeLimitBytes = null)
         {
-            if (sinkConfiguration == null)
-            {
-                throw new ArgumentNullException("configuration");
-            }
 
             var templateFormatter = new MessageTemplateTextFormatter(outputTemplate, formatProvider);
 
-            var sink = new SizeRollingFileSink(pathFormat, templateFormatter, fileSizeLimitBytes ?? DefaultFileSizeLimitBytes,
-                retainedFileDurationLimit ?? TimeSpan.Parse(DefaultretainedFileDurationLimit));
-
-            return sinkConfiguration.Sink(sink, restrictedToMinimumLevel);
+            return SizeRollingFile(sinkConfiguration, templateFormatter, pathFormat, retainedFileDurationLimit, 
+                restrictedToMinimumLevel, outputTemplate, formatProvider, fileSizeLimitBytes);            
         }
 
         public static LoggerConfiguration SizeRollingFile(this LoggerSinkConfiguration sinkConfiguration, ITextFormatter formatter, string pathFormat, TimeSpan? retainedFileDurationLimit = null,
@@ -62,6 +56,6 @@
                 retainedFileDurationLimit ?? TimeSpan.Parse(DefaultretainedFileDurationLimit));
 
             return sinkConfiguration.Sink(sink, restrictedToMinimumLevel);
-        }
+        }        
     }
 }
