@@ -37,11 +37,6 @@ new LoggerConfiguration()
 
 ## New Feature
 
-https://www.nuget.org/packages/Serilog.Sinks.RollingFile.Extension/1.0.5-Beta
-
-    PM> Install-Package Serilog.Sinks.RollingFile.Extension -Pre
-
-
 ### 1. Separating output file based on Log Level
 
 Adding new variable in path tamplte to suppoert the log's {Level}, can use it same as {Date} variable
