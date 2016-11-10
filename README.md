@@ -35,7 +35,7 @@ new LoggerConfiguration()
 </appSettings>
 ```
 
-## New Feature (Not release yet)
+## New Feature
 
 https://www.nuget.org/packages/Serilog.Sinks.RollingFile.Extension/1.0.5-Beta
 
