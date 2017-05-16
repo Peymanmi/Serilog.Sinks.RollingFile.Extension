@@ -27,6 +27,7 @@
         private readonly TemplatedPathRoller roller;
         private readonly BlockingCollection<LogEvent> queue;
         private readonly CancellationTokenSource cancelToken = new CancellationTokenSource();
+        private DateTime lastRollDate = DateTime.MinValue.Date;
 
         public SizeRollingFileSink(string pathFormat, ITextFormatter formatter, long fileSizeLimitBytes,
             TimeSpan? retainedFileDurationLimit, Encoding encoding = null)
@@ -84,7 +85,13 @@
                 if (currentSink.SizeLimitReached || resetSequence)
                 {
                     currentSink = NextSizeLimitedFileSink(resetSequence, logEvent.Level);
-                    ApplyRetentionPolicy(roller.LogFileDirectory);
+                    ApplyRetentionPolicy();
+                }
+
+                if (DateTime.UtcNow.Date > lastRollDate.Date)
+                {
+                    lastRollDate = DateTime.UtcNow.Date;
+                    ApplyRetentionPolicy();
                 }
 
                 if (this.currentSink != null)
@@ -141,15 +148,9 @@
             }
         }
 
-        private void ApplyRetentionPolicy(string currentFilePath)
+        private void ApplyRetentionPolicy()
         {
             if (!retainedFileDurationLimit.HasValue) return;
-
-            var currentFileName = Path.GetFileName(currentFilePath);
-
-            var potentialMatches = Directory.GetFiles(roller.LogFileDirectory, roller.DirectorySearchPattern)
-                .Select(Path.GetFileName)
-                .Union(new[] { currentFileName });
 
             var toRemove = roller.GetAllFiles()
                 .Where(f => DateTime.UtcNow.Subtract(f.Date).TotalSeconds > retainedFileDurationLimit.Value.TotalSeconds)
