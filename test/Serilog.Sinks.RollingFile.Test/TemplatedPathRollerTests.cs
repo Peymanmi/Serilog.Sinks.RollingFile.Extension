@@ -1,11 +1,14 @@
 ﻿namespace Serilog.Sinks.RollingFile.Test
 {
-    using NUnit.Framework;
-    using Extension.Sinks;
     using System;
-    using System.Linq;
     using System.IO;
+    using System.Linq;
+
     using Events;
+
+    using Extension.Sinks;
+
+    using NUnit.Framework;
 
     [Category("Unit")]
     public class TemplatedPathRollerTests

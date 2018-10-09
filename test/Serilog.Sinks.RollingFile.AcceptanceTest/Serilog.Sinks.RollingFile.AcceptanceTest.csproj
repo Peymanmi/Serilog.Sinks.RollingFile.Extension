@@ -98,8 +98,8 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Serilog.Sinks.RollingFile.Extension\Serilog.Sinks.RollingFile.Extension.csproj">
-      <Project>{0f83fd94-e32b-49a2-84f9-ec570b5616dc}</Project>
+    <ProjectReference Include="..\..\src\Serilog.Sinks.RollingFile.Extension\Serilog.Sinks.RollingFile.Extension.csproj">
+      <Project>{30f1f9d5-7b3c-4525-8672-ec00e71899a4}</Project>
       <Name>Serilog.Sinks.RollingFile.Extension</Name>
     </ProjectReference>
   </ItemGroup>
