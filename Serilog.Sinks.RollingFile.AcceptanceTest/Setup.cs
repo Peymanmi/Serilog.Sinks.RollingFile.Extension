@@ -1,18 +1,15 @@
 ﻿namespace Serilog.Sinks.RollingFile.AcceptanceTest
 {
-    using TechTalk.SpecFlow;
     using System;
-    using System.Linq;
     using System.IO;
+    using System.Linq;
+
+    using TechTalk.SpecFlow;
 
     [Binding]
     public class Setup
     {
         private static ILogger logger;
-
-        static Setup()
-        {
-        }
 
         [AfterTestRun]
         public static void After()

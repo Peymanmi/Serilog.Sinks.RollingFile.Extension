@@ -1,8 +1,9 @@
 ﻿namespace Serilog.Sinks.RollingFile.Extension.Sinks
 {
-    using Events;
     using System;
     using System.Collections.Generic;
+
+    using Events;
 
     public class RollingLogFile
     {
@@ -22,7 +23,7 @@
             LogEventLevel logLevel;
             if (Enum.TryParse(level, true, out logLevel))
             {
-                this.Level = logLevel;
+                Level = logLevel;
 
                 if (!SequenceCollection.ContainsKey(logLevel))
                     SequenceCollection.Add(logLevel, sequenceNumber);
@@ -39,7 +40,7 @@
         {
             get
             {
-                var l = this.Level.HasValue ? this.Level.Value : LogEventLevel.Information;
+                var l = Level.HasValue ? Level.Value : LogEventLevel.Information;
                 if (!SequenceCollection.ContainsKey(l))
                     SequenceCollection.Add(l, 0);
 
@@ -47,7 +48,7 @@
             }
             private set
             {
-                var l = this.Level.HasValue ? this.Level.Value : LogEventLevel.Information;
+                var l = Level.HasValue ? Level.Value : LogEventLevel.Information;
                 if (!SequenceCollection.ContainsKey(l))
                     SequenceCollection.Add(l, value);
 
@@ -60,7 +61,7 @@
         public DateTime Created { get; }
         internal RollingLogFile Next(TemplatedPathRoller roller, LogEventLevel? level = null)
         {
-            this.Level = level;
+            Level = level;
             var fileName = roller.GetLogFilePath(DateTime.UtcNow, level, SequenceNumber + 1);
             return new RollingLogFile(fileName, DateTime.UtcNow, SequenceNumber + 1, level.HasValue ? level.ToString() : null);
         }

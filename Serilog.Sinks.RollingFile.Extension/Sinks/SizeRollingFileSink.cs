@@ -1,35 +1,52 @@
 ﻿namespace Serilog.Sinks.RollingFile.Extension.Sinks
 {
     using System;
-    using System.Linq;
-    using Core;
-    using Events;
-    using Formatting;
-    using System.Text;
-    using System.IO;
-    using Debugging;
     using System.Collections.Concurrent;
-    using System.Threading.Tasks;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
+
     using Polly;
+
+    using Serilog.Core;
+    using Serilog.Debugging;
+    using Serilog.Events;
+    using Serilog.Formatting;
 
     public class SizeRollingFileSink : ILogEventSink, IDisposable
     {
-        private static readonly string ThisObjectName = (typeof(SizeLimitedFileSink).Name);
-        private readonly ITextFormatter formatter;
-        private readonly long fileSizeLimitBytes;
-        private readonly TimeSpan? retainedFileDurationLimit;
-        private readonly Encoding encoding;
-        private readonly ITextFormatter textFormatter;
-        private SizeLimitedFileSink currentSink;
-        private readonly object syncRoot = new object();
-        private bool disposed;
-        private readonly TemplatedPathRoller roller;
-        private readonly BlockingCollection<LogEvent> queue;
+        private static readonly string ThisObjectName = typeof(SizeLimitedFileSink).Name;
+
         private readonly CancellationTokenSource cancelToken = new CancellationTokenSource();
 
-        public SizeRollingFileSink(string pathFormat, ITextFormatter formatter, long fileSizeLimitBytes,
-            TimeSpan? retainedFileDurationLimit, Encoding encoding = null)
+        private readonly Encoding encoding;
+
+        private readonly long fileSizeLimitBytes;
+
+        private readonly ITextFormatter formatter;
+
+        private readonly BlockingCollection<LogEvent> queue;
+
+        private readonly TimeSpan? retainedFileDurationLimit;
+
+        private readonly TemplatedPathRoller roller;
+
+        private readonly object syncRoot = new object();
+
+        private readonly ITextFormatter textFormatter;
+
+        private SizeLimitedFileSink currentSink;
+
+        private bool disposed;
+
+        public SizeRollingFileSink(
+            string pathFormat,
+            ITextFormatter formatter,
+            long fileSizeLimitBytes,
+            TimeSpan? retainedFileDurationLimit,
+            Encoding encoding = null)
         {
             roller = new TemplatedPathRoller(pathFormat);
 
@@ -37,19 +54,33 @@
             this.fileSizeLimitBytes = fileSizeLimitBytes;
             this.encoding = encoding;
             this.retainedFileDurationLimit = retainedFileDurationLimit;
-            this.currentSink = GetLatestSink();
+            currentSink = GetLatestSink();
 
             if (AsyncOptions.SupportAsync)
             {
-                this.queue = new BlockingCollection<LogEvent>(AsyncOptions.BufferSize);
+                queue = new BlockingCollection<LogEvent>(AsyncOptions.BufferSize);
                 Task.Run((Action)ProcessQueue, cancelToken.Token);
             }
         }
 
+        public void Dispose()
+        {
+            lock (syncRoot)
+            {
+                if (!disposed && currentSink != null)
+                {
+                    currentSink.Dispose();
+                    currentSink = null;
+                    disposed = true;
+                    cancelToken.Cancel();
+                }
+            }
+        }
+
         /// <summary>
-        /// Emits a log event to this sink
+        ///     Emits a log event to this sink
         /// </summary>
-        /// <param name="logEvent">The <see cref="LogEvent"/> to emit</param>
+        /// <param name="logEvent">The <see cref="LogEvent" /> to emit</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         public void Emit(LogEvent logEvent)
@@ -60,16 +91,120 @@
             }
 
             if (AsyncOptions.SupportAsync)
-                this.queue.Add(logEvent);
+                queue.Add(logEvent);
             else
                 WriteToFile(logEvent);
         }
 
+        private static void EnsureDirectoryCreated(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+
+        private void ApplyRetentionPolicy(string currentFilePath)
+        {
+            if (!retainedFileDurationLimit.HasValue)
+            {
+                return;
+            }
+
+            var currentFileName = Path.GetFileName(currentFilePath);
+
+            var potentialMatches = Directory.GetFiles(roller.LogFileDirectory, roller.DirectorySearchPattern)
+                .Select(Path.GetFileName).Union(new[] { currentFileName });
+
+            var toRemove = roller.GetAllFiles()
+                .Where(
+                    f => DateTime.UtcNow.Subtract(f.Date).TotalSeconds > retainedFileDurationLimit.Value.TotalSeconds)
+                .Select(f => f.Filename).ToList();
+
+            foreach (var obsolete in toRemove)
+            {
+                var fullPath = Path.Combine(roller.LogFileDirectory, obsolete);
+                try
+                {
+                    File.Delete(fullPath);
+                }
+                catch (Exception ex)
+                {
+                    SelfLog.WriteLine("Error {0} while removing obsolete file {1}", ex, fullPath);
+                }
+            }
+        }
+
+        private SizeLimitedFileSink GetLatestSink()
+        {
+            EnsureDirectoryCreated(roller.LogFileDirectory);
+
+            var logFile = roller.GetLatestOrNew();
+
+            return new SizeLimitedFileSink(formatter, roller, fileSizeLimitBytes, logFile, encoding);
+        }
+
+        private SizeLimitedFileSink NextSizeLimitedFileSink(bool resetSequance = false, LogEventLevel? level = null)
+        {
+            if (resetSequance)
+            {
+                currentSink.LogFile.ResetSequance();
+            }
+
+            var next = currentSink.LogFile.Next(roller, level);
+            currentSink.Dispose();
+
+            return new SizeLimitedFileSink(formatter, roller, fileSizeLimitBytes, next, encoding)
+                       {
+                           ActiveLogLevel = level
+                       };
+        }
+
+        private void ProcessQueue()
+        {
+            try
+            {
+                Func<int, TimeSpan> sleepFunc = retryNumber =>
+                    TimeSpan.FromMilliseconds(AsyncOptions.RetryWaitInMillisecond * retryNumber);
+
+                var polly = Policy.Handle<Exception>();
+                polly.WaitAndRetry(
+                        AsyncOptions.MaxRetries,
+                        sleepFunc,
+                        (exception, timeSpan) => Log.Error("Error executing callback {@Exception}", exception))
+                    .Execute(ProcessQueueWithRetry);
+            }
+            catch (Exception ex)
+            {
+                SelfLog.WriteLine(
+                    "Error occured in processing queue, {0} thread: {1}",
+                    typeof(SizeRollingFileSink),
+                    ex);
+            }
+        }
+
+        private void ProcessQueueWithRetry()
+        {
+            try
+            {
+                while (true)
+                {
+                    var logEvent = queue.Take(cancelToken.Token);
+                    WriteToFile(logEvent);
+                }
+            }
+            catch
+            {
+                SelfLog.WriteLine("Error occured in ProcessQueueWithRetry, {0} ", typeof(SizeRollingFileSink));
+                throw;
+            }
+        }
+
         private void WriteToFile(LogEvent logEvent)
         {
-            lock (this.syncRoot)
+            lock (syncRoot)
             {
-                if (this.disposed)
+                if (disposed)
                 {
                     throw new ObjectDisposedException(ThisObjectName, "The rolling file sink has been disposed");
                 }
@@ -87,121 +222,10 @@
                     ApplyRetentionPolicy(roller.LogFileDirectory);
                 }
 
-                if (this.currentSink != null)
+                if (currentSink != null)
                 {
-                    this.currentSink.Emit(logEvent);
+                    currentSink.Emit(logEvent);
                 }
-            }
-        }
-
-        private SizeLimitedFileSink GetLatestSink()
-        {
-            EnsureDirectoryCreated(roller.LogFileDirectory);
-
-            var logFile = roller.GetLatestOrNew();
-
-            return new SizeLimitedFileSink(
-                this.formatter,
-                roller,
-                fileSizeLimitBytes,
-                logFile,
-                this.encoding);
-        }
-
-        private SizeLimitedFileSink NextSizeLimitedFileSink(bool resetSequance = false, LogEventLevel? level = null)
-        {
-            if (resetSequance)
-                currentSink.LogFile.ResetSequance();
-
-            var next = currentSink.LogFile.Next(roller, level);
-            this.currentSink.Dispose();
-
-            return new SizeLimitedFileSink(this.formatter, roller, fileSizeLimitBytes, next, this.encoding) { ActiveLogLevel = level };
-        }
-
-        private static void EnsureDirectoryCreated(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
-
-        public void Dispose()
-        {
-            lock (this.syncRoot)
-            {
-                if (!disposed && currentSink != null)
-                {
-                    currentSink.Dispose();
-                    currentSink = null;
-                    disposed = true;
-                    cancelToken.Cancel();
-                }
-            }
-        }
-
-        private void ApplyRetentionPolicy(string currentFilePath)
-        {
-            if (!retainedFileDurationLimit.HasValue) return;
-
-            var currentFileName = Path.GetFileName(currentFilePath);
-
-            var potentialMatches = Directory.GetFiles(roller.LogFileDirectory, roller.DirectorySearchPattern)
-                .Select(Path.GetFileName)
-                .Union(new[] { currentFileName });
-
-            var toRemove = roller.GetAllFiles()
-                .Where(f => DateTime.UtcNow.Subtract(f.Date).TotalSeconds > retainedFileDurationLimit.Value.TotalSeconds)
-                .Select(f => f.Filename)
-                .ToList();
-
-            foreach (var obsolete in toRemove)
-            {
-                var fullPath = Path.Combine(roller.LogFileDirectory, obsolete);
-                try
-                {
-                    System.IO.File.Delete(fullPath);
-                }
-                catch (Exception ex)
-                {
-                    SelfLog.WriteLine("Error {0} while removing obsolete file {1}", ex, fullPath);
-                }
-            }
-        }
-
-        private void ProcessQueue()
-        {
-            try
-            {
-                Func<int, TimeSpan> sleepFunc =
-                            retryNumber => TimeSpan.FromMilliseconds(AsyncOptions.RetryWaitInMillisecond * retryNumber);
-
-                var polly = Policy.Handle<Exception>();
-                polly.WaitAndRetry(AsyncOptions.MaxRetries, sleepFunc,
-                       (exception, timeSpan) => Log.Error("Error executing callback {@Exception}", exception))
-                       .Execute(ProcessQueueWithRetry);                
-            }
-            catch (Exception ex)
-            {
-                SelfLog.WriteLine("Error occured in processing queue, {0} thread: {1}", typeof(SizeRollingFileSink), ex);
-            }
-        }
-        
-        private void ProcessQueueWithRetry()
-        {
-            try
-            {
-                while (true)
-                {
-                    var logEvent = queue.Take(this.cancelToken.Token);
-                    WriteToFile(logEvent);
-                }
-            }
-            catch
-            {
-                SelfLog.WriteLine("Error occured in ProcessQueueWithRetry, {0} ", typeof(SizeRollingFileSink));
-                throw;
             }
         }
     }

@@ -27,8 +27,8 @@
             this.formatter = formatter;
             this.roller = roller;
             this.fileSizeLimitBytes = fileSizeLimitBytes;
-            this.EnableLevelLogging = roller.PathIncludesLevel;
-            this.output = OpenFileForWriting(roller.LogFileDirectory, roller.GetLatestOrNew(), encoding ?? Encoding.UTF8);
+            EnableLevelLogging = roller.PathIncludesLevel;
+            output = OpenFileForWriting(roller.LogFileDirectory, roller.GetLatestOrNew(), encoding ?? Encoding.UTF8);
         }
 
         public SizeLimitedFileSink(ITextFormatter formatter, TemplatedPathRoller roller, long fileSizeLimitBytes,
@@ -37,8 +37,8 @@
             this.formatter = formatter;
             this.roller = roller;
             this.fileSizeLimitBytes = fileSizeLimitBytes;
-            this.EnableLevelLogging = roller.PathIncludesLevel;
-            this.output = OpenFileForWriting(roller.LogFileDirectory, rollingLogFile, encoding ?? Encoding.UTF8);
+            EnableLevelLogging = roller.PathIncludesLevel;
+            output = OpenFileForWriting(roller.LogFileDirectory, rollingLogFile, encoding ?? Encoding.UTF8);
         }
 
         private StreamWriter OpenFileForWriting(string folderPath, RollingLogFile rollingLogFile, Encoding encoding)
@@ -92,7 +92,7 @@
                 formatter.Format(logEvent, output);
                 output.Flush();
 
-                this.ActiveLogLevel = logEvent.Level;
+                ActiveLogLevel = logEvent.Level;
 
                 if (output.BaseStream.Length > fileSizeLimitBytes)
                 {

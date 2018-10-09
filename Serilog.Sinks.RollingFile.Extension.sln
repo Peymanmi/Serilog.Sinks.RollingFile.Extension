@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.RollingFile.Extension", "Serilog.Sinks.RollingFile.Extension\Serilog.Sinks.RollingFile.Extension.csproj", "{FE90E514-680C-4F6A-94C8-3ADD4377A344}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.RollingFile.Test", "Serilog.Sinks.RollingFile.Test\Serilog.Sinks.RollingFile.Test.csproj", "{1CA76B45-B8A4-48E0-A120-DA56F2BD7A18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.RollingFile.AcceptanceTest", "Serilog.Sinks.RollingFile.AcceptanceTest\Serilog.Sinks.RollingFile.AcceptanceTest.csproj", "{213C5159-C33B-42ED-B8E7-2662555DFD2F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{63077FE8-D006-40F7-884E-417FC0D641BA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.RollingFile.Extension", "Serilog.Sinks.RollingFile.Extension\Serilog.Sinks.RollingFile.Extension.csproj", "{0F83FD94-E32B-49A2-84F9-EC570B5616DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FE90E514-680C-4F6A-94C8-3ADD4377A344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE90E514-680C-4F6A-94C8-3ADD4377A344}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE90E514-680C-4F6A-94C8-3ADD4377A344}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE90E514-680C-4F6A-94C8-3ADD4377A344}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1CA76B45-B8A4-48E0-A120-DA56F2BD7A18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1CA76B45-B8A4-48E0-A120-DA56F2BD7A18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CA76B45-B8A4-48E0-A120-DA56F2BD7A18}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -29,6 +25,10 @@ Global
 		{213C5159-C33B-42ED-B8E7-2662555DFD2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{213C5159-C33B-42ED-B8E7-2662555DFD2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{213C5159-C33B-42ED-B8E7-2662555DFD2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F83FD94-E32B-49A2-84F9-EC570B5616DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F83FD94-E32B-49A2-84F9-EC570B5616DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F83FD94-E32B-49A2-84F9-EC570B5616DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F83FD94-E32B-49A2-84F9-EC570B5616DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,5 +36,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1CA76B45-B8A4-48E0-A120-DA56F2BD7A18} = {63077FE8-D006-40F7-884E-417FC0D641BA}
 		{213C5159-C33B-42ED-B8E7-2662555DFD2F} = {63077FE8-D006-40F7-884E-417FC0D641BA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9B0F5A20-867A-4E6E-A6FA-38107D68204A}
 	EndGlobalSection
 EndGlobal

@@ -1,13 +1,12 @@
 ﻿namespace Serilog.Sinks.RollingFile.Test
 {
-    using NUnit.Framework;
-    using Events;
-    using Support;
     using System;
-    using System.Collections.Generic;
-    using System.IO;
+
     using Extension;
+
     using Formatting.Compact;
+
+    using NUnit.Framework;
 
     [Category("Unit")]
     public class TestFormatterTest
