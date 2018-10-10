@@ -26,6 +26,8 @@ new LoggerConfiguration()
 
 ### 2. Configuration file
 
+#### XML `appsettings.json` configuration
+
 ```xml
 <appSettings>
     <add key="serilog:using:SizeRollingFile" value="Serilog.Sinks.RollingFile.Extension"/>
@@ -33,6 +35,47 @@ new LoggerConfiguration()
     <add key="serilog:write-to:SizeRollingFile.fileSizeLimitBytes" value="10485760"/>
     <add key="serilog:write-to:SizeRollingFile.retainedFileDurationLimit" value="2.00:00:00"/>
 </appSettings>
+```
+
+#### JSON `appsettings.json` configuration
+
+To use the file sink with _Microsoft.Extensions.Configuration_, for example with ASP.NET Core or .NET Core, use the [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration) package. First install that package if you have not already done so:
+
+```powershell
+Install-Package Serilog.Settings.Configuration
+```
+
+Instead of configuring the file directly in code, call `ReadFrom.Configuration()`:
+
+```csharp
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+```
+
+your `appsettings.json` file should look like this :
+
+```json
+{
+  "Serilog": {
+    "Using": [ "Serilog.Sinks.RollingFile.Extension" ],
+    "MinimumLevel": "Debug",
+    "WriteTo": [
+      {
+        "Name": "SizeRollingFile",
+        "Args": {
+          "pathFormat": "C:\\temp\\log.txt",
+          "fileSizeLimitBytes ": 200,
+          "retainedFileDurationLimit": "00:00:30"
+        }
+      }
+    ]
+  }
+}
 ```
 
 ## New Feature
