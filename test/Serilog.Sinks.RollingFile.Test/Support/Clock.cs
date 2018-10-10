@@ -1,12 +1,13 @@
 ﻿namespace Serilog.Sinks.RollingFile.Test.Support
 {
     using System;
-    static class Clock
+
+    internal static class Clock
     {
-        static Func<DateTime> _dateTimeNow = () => DateTime.Now;
+        private static Func<DateTime> _dateTimeNow = () => DateTime.Now;
 
         [ThreadStatic]
-        static DateTime _testDateTimeNow;
+        private static DateTime _testDateTimeNow;
 
         public static DateTime DateTimeNow => _dateTimeNow();
 

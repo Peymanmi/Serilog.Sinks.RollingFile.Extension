@@ -2,11 +2,10 @@
 {
     using System;
 
-    using Extension;
-
-    using Formatting.Compact;
-
     using NUnit.Framework;
+
+    using Serilog.Formatting.Compact;
+    using Serilog.Sinks.RollingFile.Extension;
 
     [Category("Unit")]
     public class TestFormatterTest
@@ -16,7 +15,10 @@
         {
             var loggerConfiguration = new LoggerConfiguration();
 
-            loggerConfiguration.WriteTo.SizeRollingFile(new CompactJsonFormatter(), "c:\\logs\\Log-{{Date}}.json", retainedFileDurationLimit: TimeSpan.FromDays(3));
+            loggerConfiguration.WriteTo.SizeRollingFile(
+                new CompactJsonFormatter(),
+                "c:\\logs\\Log-{{Date}}.json",
+                TimeSpan.FromDays(3));
 
             var logger = loggerConfiguration.CreateLogger();
 

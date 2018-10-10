@@ -1,35 +1,30 @@
 ﻿namespace Serilog.Sinks.RollingFile.Test.Support
 {
-    using Events;
-    using Parsing;
     using System;
     using System.IO;
     using System.Linq;
     using System.Threading;
 
+    using Serilog.Events;
+    using Serilog.Parsing;
 
-    static class Some
+    internal static class Some
     {
-        static int Counter;
-
-        public static int Int()
-        {
-            return Interlocked.Increment(ref Counter);
-        }
+        private static int Counter;
 
         public static decimal Decimal()
         {
             return Int() + 0.123m;
         }
 
-        public static string String(string tag = null)
+        public static LogEvent InformationEvent(DateTimeOffset? timestamp = null)
         {
-            return (tag ?? "") + "__" + Int();
-        }
-
-        public static TimeSpan TimeSpan()
-        {
-            return System.TimeSpan.FromMinutes(Int());
+            return new LogEvent(
+                timestamp ?? OffsetInstant(),
+                LogEventLevel.Information,
+                null,
+                MessageTemplate(),
+                Enumerable.Empty<LogEventProperty>());
         }
 
         public static DateTime Instant()
@@ -37,15 +32,9 @@
             return new DateTime(2012, 10, 28) + TimeSpan();
         }
 
-        public static DateTimeOffset OffsetInstant()
+        public static int Int()
         {
-            return new DateTimeOffset(Instant());
-        }
-
-        public static LogEvent InformationEvent(DateTimeOffset? timestamp = null)
-        {
-            return new LogEvent(timestamp ?? OffsetInstant(), LogEventLevel.Information,
-                null, MessageTemplate(), Enumerable.Empty<LogEventProperty>());
+            return Interlocked.Increment(ref Counter);
         }
 
         public static LogEventProperty LogEventProperty()
@@ -53,9 +42,24 @@
             return new LogEventProperty(String(), new ScalarValue(Int()));
         }
 
+        public static MessageTemplate MessageTemplate()
+        {
+            return new MessageTemplateParser().Parse(String());
+        }
+
         public static string NonexistentTempFilePath()
         {
             return Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+        }
+
+        public static DateTimeOffset OffsetInstant()
+        {
+            return new DateTimeOffset(Instant());
+        }
+
+        public static string String(string tag = null)
+        {
+            return (tag ?? "") + "__" + Int();
         }
 
         public static string TempFilePath()
@@ -70,9 +74,9 @@
             return dir;
         }
 
-        public static MessageTemplate MessageTemplate()
+        public static TimeSpan TimeSpan()
         {
-            return new MessageTemplateParser().Parse(String());
+            return System.TimeSpan.FromMinutes(Int());
         }
     }
 }

@@ -21,19 +21,15 @@
 
                 ((IDisposable)logger).Dispose();
 
-                files.ForEach(f => File.Delete(f));                
+                files.ForEach(f => File.Delete(f));
             }
-
         }
 
         [BeforeTestRun]
         public static void Before()
         {
-            logger = new LoggerConfiguration()
-                    .ReadFrom.AppSettings()
-                    .Enrich.WithMachineName()
-                    .Enrich.FromLogContext()
-                    .CreateLogger();
+            logger = new LoggerConfiguration().ReadFrom.AppSettings().Enrich.WithMachineName().Enrich.FromLogContext()
+                .CreateLogger();
 
             Log.Logger = logger;
             logger.Information("Logger has been initialized!");

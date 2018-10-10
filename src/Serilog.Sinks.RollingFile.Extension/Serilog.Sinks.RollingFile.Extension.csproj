@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <VersionPrefix>2.0.0</VersionPrefix>
+    <VersionPrefix>2.0.2</VersionPrefix>
     <PackageTags>Serilog</PackageTags>
     <PackageProjectUrl>https://github.com/Peymanmi/Serilog.Sinks.RollingFile.Extension</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

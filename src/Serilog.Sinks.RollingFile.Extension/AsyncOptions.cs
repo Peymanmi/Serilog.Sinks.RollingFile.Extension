@@ -1,12 +1,5 @@
 ﻿namespace Serilog.Sinks.RollingFile.Extension
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
-
     internal static class AsyncOptions
     {
         static AsyncOptions()
@@ -21,8 +14,8 @@
 
         public static int MaxRetries { get; set; }
 
-        public static bool SupportAsync { get; set; }
-
         public static int RetryWaitInMillisecond { get; set; }
+
+        public static bool SupportAsync { get; set; }
     }
 }

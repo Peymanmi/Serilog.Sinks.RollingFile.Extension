@@ -206,7 +206,7 @@
                 return matchedFiles.OrderBy(x => x.SequenceNumber).Last();
             }
 
-            return new RollingLogFile(this.GetLogFilePath(DateTime.UtcNow, level, 1), DateTime.UtcNow, 1);
+            return new RollingLogFile(GetLogFilePath(DateTime.UtcNow, level, 1), DateTime.UtcNow, 1);
         }
     }
 }

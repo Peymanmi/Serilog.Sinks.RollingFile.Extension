@@ -1,36 +1,18 @@
 ﻿namespace Serilog.Sinks.RollingFile.Test
 {
-    using NUnit.Framework;
-    using Events;
-    using Support;
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using Extension;
+
+    using NUnit.Framework;
+
+    using Serilog.Events;
+    using Serilog.Sinks.RollingFile.Extension;
+    using Serilog.Sinks.RollingFile.Test.Support;
 
     [Category("Unit")]
     public class RollingFileSinkTests
     {
-        [SetUp]
-        public void RunBeforeAnyTest()
-        {
-
-        }
-
-        [Test]
-        public void LogEventsAreEmittedToTheFileNamedAccordingToTheEventTimestamp()
-        {
-            TestRollingEventSequence(Some.InformationEvent());
-        }
-
-        [Test]
-        public void WhenTheDateChangesTheCorrectFileIsWritten()
-        {
-            var e1 = Some.InformationEvent();
-            var e2 = Some.InformationEvent(e1.Timestamp.AddDays(1));
-            TestRollingEventSequence(e1, e2);
-        }        
-
         [Test]
         public void IfTheLogFolderDoesNotExistItWillBeCreated()
         {
@@ -43,8 +25,7 @@
 
             try
             {
-                log = new LoggerConfiguration()
-                    .WriteTo.SizeRollingFile(pathFormat, retainedFileDurationLimit: TimeSpan.FromSeconds(180))
+                log = new LoggerConfiguration().WriteTo.SizeRollingFile(pathFormat, TimeSpan.FromSeconds(180))
                     .CreateLogger();
 
                 log.Write(Some.InformationEvent());
@@ -59,19 +40,40 @@
             }
         }
 
-        static void TestRollingEventSequence(params LogEvent[] events)
+        [Test]
+        public void LogEventsAreEmittedToTheFileNamedAccordingToTheEventTimestamp()
+        {
+            TestRollingEventSequence(Some.InformationEvent());
+        }
+
+        [SetUp]
+        public void RunBeforeAnyTest()
+        {
+        }
+
+        [Test]
+        public void WhenTheDateChangesTheCorrectFileIsWritten()
+        {
+            var e1 = Some.InformationEvent();
+            var e2 = Some.InformationEvent(e1.Timestamp.AddDays(1));
+            TestRollingEventSequence(e1, e2);
+        }
+
+        private static void TestRollingEventSequence(params LogEvent[] events)
         {
             TestRollingEventSequence(events, null, f => { });
         }
 
-        static void TestRollingEventSequence(IEnumerable<LogEvent> events, int? retainedFiles, Action<IList<string>> verifyWritten)
+        private static void TestRollingEventSequence(
+            IEnumerable<LogEvent> events,
+            int? retainedFiles,
+            Action<IList<string>> verifyWritten)
         {
             var fileName = Some.String() + "-{Date}.txt";
             var folder = Some.TempFolderPath();
             var pathFormat = Path.Combine(folder, fileName);
 
-            var log = new LoggerConfiguration()
-                .WriteTo.SizeRollingFile(pathFormat, retainedFileDurationLimit: TimeSpan.FromSeconds(180))
+            var log = new LoggerConfiguration().WriteTo.SizeRollingFile(pathFormat, TimeSpan.FromSeconds(180))
                 .CreateLogger();
 
             var verified = new List<string>();
@@ -79,10 +81,10 @@
             try
             {
                 foreach (var @event in events)
-                {                    
+                {
                     log.Write(@event);
 
-                    var expected = pathFormat.Replace("{Date}", DateTime.UtcNow.ToString("yyyyMMdd") + "_0001");                    
+                    var expected = pathFormat.Replace("{Date}", DateTime.UtcNow.ToString("yyyyMMdd") + "_0001");
                     Assert.True(File.Exists(expected));
 
                     verified.Add(expected);
@@ -90,7 +92,7 @@
             }
             finally
             {
-                ((IDisposable)log).Dispose();
+                log.Dispose();
                 verifyWritten(verified);
                 Directory.Delete(folder, true);
             }

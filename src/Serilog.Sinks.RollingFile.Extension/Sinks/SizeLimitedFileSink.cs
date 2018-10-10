@@ -3,26 +3,34 @@
     using System;
     using System.IO;
     using System.Text;
-    using Core;
-    using Events;
-    using Formatting;
-    using Debugging;
 
-    internal class SizeLimitedFileSink : ILogEventSink, IDisposable
+    using Serilog.Core;
+    using Serilog.Debugging;
+    using Serilog.Events;
+    using Serilog.Formatting;
+
+    public class SizeLimitedFileSink : ILogEventSink, IDisposable
     {
         private static readonly string ThisObjectName = typeof(SizeLimitedFileSink).Name;
 
-        private readonly ITextFormatter formatter;
-        private readonly TemplatedPathRoller roller;
-        private readonly StreamWriter output;
         private readonly long fileSizeLimitBytes;
-        private readonly object syncRoot = new object();
-        private RollingLogFile currentLogFile;
-        private bool disposed;
-        private bool sizeLimitReached;
 
-        public SizeLimitedFileSink(ITextFormatter formatter, TemplatedPathRoller roller, long fileSizeLimitBytes, Encoding encoding = null)
-                : this(formatter, roller, fileSizeLimitBytes, roller.GetLatestOrNew(), encoding)
+        private readonly ITextFormatter formatter;
+
+        private readonly StreamWriter output;
+
+        private readonly TemplatedPathRoller roller;
+
+        private readonly object syncRoot = new object();
+
+        private bool disposed;
+
+        public SizeLimitedFileSink(
+            ITextFormatter formatter,
+            TemplatedPathRoller roller,
+            long fileSizeLimitBytes,
+            Encoding encoding = null)
+            : this(formatter, roller, fileSizeLimitBytes, roller.GetLatestOrNew(), encoding)
         {
             this.formatter = formatter;
             this.roller = roller;
@@ -31,8 +39,12 @@
             output = OpenFileForWriting(roller.LogFileDirectory, roller.GetLatestOrNew(), encoding ?? Encoding.UTF8);
         }
 
-        public SizeLimitedFileSink(ITextFormatter formatter, TemplatedPathRoller roller, long fileSizeLimitBytes,
-            RollingLogFile rollingLogFile, Encoding encoding = null)
+        public SizeLimitedFileSink(
+            ITextFormatter formatter,
+            TemplatedPathRoller roller,
+            long fileSizeLimitBytes,
+            RollingLogFile rollingLogFile,
+            Encoding encoding = null)
         {
             this.formatter = formatter;
             this.roller = roller;
@@ -41,41 +53,30 @@
             output = OpenFileForWriting(roller.LogFileDirectory, rollingLogFile, encoding ?? Encoding.UTF8);
         }
 
-        private StreamWriter OpenFileForWriting(string folderPath, RollingLogFile rollingLogFile, Encoding encoding)
+        internal LogEventLevel? ActiveLogLevel { get; set; }
+
+        internal bool EnableLevelLogging { get; }
+
+        internal RollingLogFile LogFile { get; private set; }
+
+        internal bool SizeLimitReached { get; private set; }
+
+        public void Dispose()
         {
-            EnsureDirectoryCreated(folderPath);
-            try
+            if (!disposed)
             {
-                currentLogFile = rollingLogFile;
-                var fullPath = Path.Combine(folderPath, rollingLogFile.Filename);
-                var stream = File.Open(fullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
-
-                return new StreamWriter(stream, encoding ?? Encoding.UTF8);
-            }
-            catch (IOException ex)
-            {
-                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
-
-                return OpenFileForWriting(folderPath, rollingLogFile.Next(roller), encoding);
-            }
-            catch (Exception ex)
-            {
-                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
-                throw;
-            }
-        }
-
-        private static void EnsureDirectoryCreated(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
+                output.Flush();
+                output.Dispose();
+                disposed = true;
             }
         }
 
         public void Emit(LogEvent logEvent)
         {
-            if (logEvent == null) throw new ArgumentNullException("logEvent");
+            if (logEvent == null)
+            {
+                throw new ArgumentNullException("logEvent");
+            }
 
             lock (syncRoot)
             {
@@ -96,32 +97,40 @@
 
                 if (output.BaseStream.Length > fileSizeLimitBytes)
                 {
-                    sizeLimitReached = true;
+                    SizeLimitReached = true;
                 }
             }
         }
 
-        internal bool EnableLevelLogging { get; private set; }
-
-        internal LogEventLevel? ActiveLogLevel { get; set; }
-
-        internal bool SizeLimitReached { get { return sizeLimitReached; } }
-
-        internal RollingLogFile LogFile
+        private static void EnsureDirectoryCreated(string path)
         {
-            get
+            if (!Directory.Exists(path))
             {
-                return currentLogFile;
+                Directory.CreateDirectory(path);
             }
         }
 
-        public void Dispose()
+        private StreamWriter OpenFileForWriting(string folderPath, RollingLogFile rollingLogFile, Encoding encoding)
         {
-            if (!disposed)
+            EnsureDirectoryCreated(folderPath);
+            try
             {
-                output.Flush();
-                output.Dispose();
-                disposed = true;
+                LogFile = rollingLogFile;
+                var fullPath = Path.Combine(folderPath, rollingLogFile.Filename);
+                var stream = File.Open(fullPath, FileMode.Append, FileAccess.Write, FileShare.Read);
+
+                return new StreamWriter(stream, encoding ?? Encoding.UTF8);
+            }
+            catch (IOException ex)
+            {
+                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
+
+                return OpenFileForWriting(folderPath, rollingLogFile.Next(roller), encoding);
+            }
+            catch (Exception ex)
+            {
+                SelfLog.WriteLine("Error {0} while opening obsolete file {1}", ex, rollingLogFile.Filename);
+                throw;
             }
         }
     }
